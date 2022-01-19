@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+    <title>Trybe - Project: WebChat</title>
+  </head>
+  <body>
+    <section>
+      <h1 id="welcome-msg"></h1>
+      <div>
+        <p>User: </p>
+        <p id="user-id" data-testid="online-user"></p>
+      </div>
+      <input id="input-name" type="text" placeholder="Nickname..." data-testid="nickname-box">
+      <button id="btn-name" data-testid="nickname-button">Change</button>
+    </section>
+    <section>
+      <h3>Chat:</h3>
+      <input id="input-msg" type="text" placeholder="Message..." data-testid="message-box">
+      <button id="btn-msg" data-testid="send-button">Send</button>
+      <ul id="chat"></ul>
+
+    </section>
+    <script>
+      const socket = io('http://localhost:3000');
+
+      socket.on('welcome', (msg) => {
+        const welcomeMsg = document.getElementById('welcome-msg');
+        welcomeMsg.innerText = msg;
+      });
+
+      socket.on('userId', (id) => {
+        const userId = document.getElementById('user-id');
+        
+        const nickname = id.slice(0, 16);
+        userId.innerText = nickname;
+      });
+
+      const btnName = document.getElementById('btn-name');
+      btnName.addEventListener('click', () => {
+        const input = document.getElementById('input-name');
+        const userId = document.getElementById('user-id');
+
+        userId.innerText = input.value;
+        input.value='';
+      });
+
+      socket.on('message', (msg) => {
+        const chat = document.getElementById('chat');
+        const newMsg = document.createElement('li');
+        newMsg.innerText = msg;
+        newMsg.setAttribute('data-testid', 'message');
+        chat.appendChild(newMsg);
+      });
+
+      const btnSend = document.getElementById('btn-msg');
+      btnSend.addEventListener('click', () => {
+        const input = document.getElementById('input-msg');
+        const userId = document.getElementById('user-id').innerHTML;
+
+        const nickname = userId;
+        const chatMessage = input.value;
+        input.value='';
+        
+        socket.emit('message', { chatMessage, nickname });
+      });
+    </script>
+  </body>
+</html>

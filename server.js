@@ -1,11 +1,21 @@
 const express = require('express');
-const http = require('http').createServer(express());
+
+const app = express();
+
+app.set('view engine', 'ejs');
+app.set('views', './views');
+
+const http = require('http').createServer(app);
 
 const io = require('socket.io')(http, {
   cors: {
     origin: 'http://localhost:3000',
     methods: ['GET', 'POST'],
   },
+});
+
+app.get('/', (_req, res) => {
+  res.render('webchat');
 });
 
 require('./sockets/webchat')(io);
