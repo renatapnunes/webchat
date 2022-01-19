@@ -19,8 +19,13 @@
       <h3>Chat:</h3>
       <input id="input-msg" type="text" placeholder="Message..." data-testid="message-box">
       <button id="btn-msg" data-testid="send-button">Send</button>
-      <ul id="chat"></ul>
-
+      <ul id="chat">
+        <% messages.forEach((msg) => {%>
+          <li data-testid="message">
+            <%= msg %>
+          </li>
+        <%})%>
+      </ul>
     </section>
     <script>
       const socket = io('http://localhost:3000');
