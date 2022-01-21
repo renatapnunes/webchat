@@ -6,14 +6,16 @@
     <title>Trybe - Project: WebChat</title>
   </head>
   <body>
+    <h1 id="welcome-msg">WEBCHAT - Boas vindas!!!</h1>
     <section>
-      <h1 id="welcome-msg"></h1>
       <div>
-        <p>User: </p>
-        <p id="user-id" data-testid="online-user"></p>
+        <input id="input-name" type="text" placeholder="Nickname..." data-testid="nickname-box">
+        <button id="btn-name" data-testid="nickname-button">Change</button>
       </div>
-      <input id="input-name" type="text" placeholder="Nickname..." data-testid="nickname-box">
-      <button id="btn-name" data-testid="nickname-button">Change</button>
+      <div>
+        <h3>Online users:</h3>
+        <ul id="users"></ul>
+      </div>
     </section>
     <section>
       <h3>Chat:</h3>
@@ -30,29 +32,40 @@
     <script>
       const socket = io('http://localhost:3000');
 
-      socket.on('welcome', (msg) => {
-        const welcomeMsg = document.getElementById('welcome-msg');
-        welcomeMsg.innerText = msg;
-      });
+      // logica do connectedUsers desenvolvida com a ajuda do colega de turma Bruno Augusto
+      socket.on('connectedUsers', (connectedUsers) => {
+        const client = connectedUsers.find(({ id }) => id === socket.id);
+        const listUsers = document.getElementById('users');
 
-      socket.on('userId', (id) => {
-        const userId = document.getElementById('user-id');
-        
-        const nickname = id.slice(0, 16);
-        userId.innerText = nickname;
+        listUsers.innerHTML = '';
+
+        const newUser = document.createElement('li');
+        newUser.innerText = client.nickname;
+        newUser.setAttribute('data-testid', 'online-user');
+        newUser.id = 'client';
+        listUsers.appendChild(newUser);
+
+        connectedUsers.forEach(({ id, nickname }) => {
+          if (id !== socket.id) {
+            const newUser = document.createElement('li');
+            newUser.innerText = nickname;
+            newUser.setAttribute('data-testid', 'online-user');
+            listUsers.appendChild(newUser);
+          }
+        });
       });
 
       const btnName = document.getElementById('btn-name');
       btnName.addEventListener('click', () => {
         const input = document.getElementById('input-name');
-        const userId = document.getElementById('user-id');
 
-        userId.innerText = input.value;
+        socket.emit('connectedUsers', { id: socket.id, nickname: input.value });
         input.value='';
       });
 
       socket.on('message', (msg) => {
         const chat = document.getElementById('chat');
+
         const newMsg = document.createElement('li');
         newMsg.innerText = msg;
         newMsg.setAttribute('data-testid', 'message');
@@ -62,13 +75,13 @@
       const btnSend = document.getElementById('btn-msg');
       btnSend.addEventListener('click', () => {
         const input = document.getElementById('input-msg');
-        const userId = document.getElementById('user-id').innerHTML;
+        const client = document.getElementById('client').innerText;
 
-        const nickname = userId;
+        const nickname = client;
         const chatMessage = input.value;
-        input.value='';
         
         socket.emit('message', { chatMessage, nickname });
+        input.value='';
       });
     </script>
   </body>

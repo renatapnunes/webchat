@@ -1,25 +1,31 @@
-const moment = require('moment'); // bibli indicada pelo instrutor Ricci
+// o uso do moment foi indicado pelo instrutor Ricci
+const moment = require('moment');
 const insert = require('../models/entity/insert');
+
+let connectedUsers = [];
 
 module.exports = (io) => {
   io.on('connection', (socket) => {
-    console.log('\n >>>>> ', socket.id, ' entrou \n');
-
-    socket.emit('welcome', 'Welcome to webchat!');
-    socket.emit('userId', `${socket.id}`);
+    connectedUsers.push({ id: socket.id, nickname: socket.id.slice(0, 16) });
+    io.emit('connectedUsers', connectedUsers);
 
     socket.on('message', async ({ chatMessage, nickname }) => {
-      const msgDB = {
-        message: chatMessage,
-        nickname,
-        timestamp: moment(new Date()).format('YYYY-MM-DD h:mm:ss a'),
-      };
-      await insert('messages', msgDB);
-      
       const date = moment(new Date()).format('DD-MM-YYYY h:mm a');
-      const msg = `${date} - ${nickname} ${chatMessage}`;
+      await insert('messages', { message: chatMessage, nickname, timestamp: date });
 
-      io.emit('message', msg);
+      io.emit('message', `${date} - ${nickname} ${chatMessage}`);
+    });
+
+    socket.on('connectedUsers', (newNickname) => {
+      const index = connectedUsers.findIndex(({ id }) => id === newNickname.id);
+      connectedUsers[index] = newNickname;
+
+      io.emit('connectedUsers', connectedUsers);
+    });
+
+    socket.on('disconnect', () => {
+      connectedUsers = connectedUsers.filter(({ id }) => id !== socket.id);
+      io.emit('connectedUsers', connectedUsers);
     });
   });
 };

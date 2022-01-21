@@ -16,10 +16,6 @@ const io = require('socket.io')(http, {
 
 const messageHistory = require('./controllers/messageHistory');
 
-// app.get('/', (_req, res) => {
-//   res.render('webchat');
-// });
-
 app.get('/', messageHistory);
 
 require('./sockets/webchat')(io);
